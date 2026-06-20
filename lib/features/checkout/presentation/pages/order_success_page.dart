@@ -16,7 +16,7 @@ class _OrderSuccessPageState extends ConsumerState<OrderSuccessPage> {
     super.initState();
     // Clear cart upon successful order
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.invalidate(cartProvider);
+      ref.read(cartProvider.notifier).clearCart();
     });
   }
 

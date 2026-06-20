@@ -55,9 +55,15 @@ class UsersNotifier extends Notifier<List<UserEntity>> {
     }
   }
 
-  void clearAllUsers() {
-    // Unsupported in pure Firebase unless iterating and deleting all docs
-    // Not typically allowed/useful for a real app, so we just return.
+  Future<void> clearAllUsers() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('users').get();
+      for (var doc in snapshot.docs) {
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      debugPrint('Failed to clear users: $e');
+    }
   }
 }
 

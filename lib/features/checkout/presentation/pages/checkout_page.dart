@@ -5,12 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import '../../../cart/presentation/providers/cart_provider.dart';
+import '../../../cart/domain/entities/cart_item.dart';
 import '../../../orders/presentation/providers/orders_provider.dart';
 import '../../../orders/domain/entities/order.dart';
 import '../../../shop/presentation/providers/products_provider.dart';
 import 'map_picker_page.dart';
 import 'package:bustedworld/core/utils/currency_formatter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/services/midtrans_service.dart';
 
 class CheckoutPage extends ConsumerStatefulWidget {
   const CheckoutPage({super.key});
@@ -118,6 +120,8 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         paymentDetail = 'Bank Transfer ($_selectedBank)';
       } else if (_selectedPayment == 'QRIS') {
         paymentDetail = 'QRIS E-Wallet';
+      } else if (_selectedPayment == 'Midtrans') {
+        paymentDetail = 'Midtrans Snap';
       }
 
       final newOrder = Order(
@@ -126,16 +130,119 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         address: '${_addressController.text.trim()} | Paid via $paymentDetail',
         items: List.from(cartItems),
         totalAmount: grandTotal,
+        status: 'Pending',
       );
 
-      ref.read(ordersProvider.notifier).addOrder(newOrder);
+      if (_selectedPayment == 'Midtrans') {
+        _startMidtransCheckout(newOrder, grandTotal, cartItems);
+      } else {
+        ref.read(ordersProvider.notifier).addOrder(newOrder);
 
-      // Reduce stock
-      for (var item in cartItems) {
-        ref.read(productsProvider.notifier).reduceStock(item.product.id, item.selectedSize, item.quantity);
+        // Reduce stock
+        for (var item in cartItems) {
+          ref.read(productsProvider.notifier).reduceStock(item.product.id, item.selectedSize, item.quantity);
+        }
+
+        context.go('/order_success');
+      }
+    }
+  }
+
+  Future<void> _startMidtransCheckout(Order newOrder, double grandTotal, List<CartItem> cartItems) async {
+    // Show progress dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    final snapData = await MidtransService.createSnapTransaction(
+      orderId: newOrder.id,
+      totalAmount: grandTotal,
+      customerName: _nameController.text.trim(),
+      items: List.from(cartItems),
+    );
+
+    if (mounted) {
+      Navigator.pop(context); // Close progress dialog
+    }
+
+    if (snapData == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('MIDTRANS ERROR: FAILED TO GENERATE SNAP TOKEN'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (mounted) {
+      // Navigate to Midtrans payment WebView
+      final result = await context.push<String>(
+        '/midtrans_payment',
+        extra: {
+          'paymentUrl': snapData['redirect_url'],
+          'orderId': newOrder.id,
+        },
+      );
+
+      // Show verifying status dialog
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
       }
 
-      context.go('/order_success');
+      final transactionStatus = await MidtransService.checkPaymentStatus(newOrder.id);
+
+      if (mounted) {
+        Navigator.pop(context); // Close status dialog
+      }
+
+      debugPrint('[CheckoutPage] Midtrans payment status: $transactionStatus, redirect result: $result');
+
+      if (transactionStatus == 'settlement' ||
+          transactionStatus == 'capture' ||
+          result == 'success') {
+        // Success! Set status to Processing (meaning Paid & processing)
+        newOrder.status = 'Processing';
+        await ref.read(ordersProvider.notifier).addOrder(newOrder);
+
+        // Reduce stock
+        for (var item in cartItems) {
+          await ref.read(productsProvider.notifier).reduceStock(item.product.id, item.selectedSize, item.quantity);
+        }
+
+        if (mounted) {
+          context.go('/order_success');
+        }
+      } else {
+        // Not settled (Pending payment or Cancelled)
+        newOrder.status = 'Pending';
+        await ref.read(ordersProvider.notifier).addOrder(newOrder);
+
+        // Clear cart since order is placed (unpaid)
+        ref.read(cartProvider.notifier).clearCart();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Payment ${transactionStatus ?? "cancelled"}. Order created as PENDING PAYMENT.'),
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+            ),
+          );
+          context.go('/order_history');
+        }
+      }
     }
   }
 
@@ -276,6 +383,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                   _buildPaymentTab('Card', 'Credit Card', Icons.credit_card_outlined),
                   _buildPaymentTab('Bank', 'Bank Transfer', Icons.account_balance_outlined),
                   _buildPaymentTab('QRIS', 'QRIS Pay', Icons.qr_code_2_outlined),
+                  _buildPaymentTab('Midtrans', 'Midtrans Snap', Icons.payment_outlined),
                 ],
               ),
               const SizedBox(height: 24),
@@ -513,39 +621,65 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       );
     }
 
-    // QRIS
-    return Container(
-      padding: const EdgeInsets.all(20),
-      color: cs.surface,
-      child: Column(
-        children: [
-          Text('SCAN QRIS CODE',
-              style: tt.labelLarge?.copyWith(letterSpacing: 1)),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            color: Colors.white, // QR code must stay white
-            width: 160,
-            height: 160,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.qr_code_scanner,
-                    color: Colors.black, size: 100),
-                const SizedBox(height: 4),
-                Text('BUSTEDWORLD QRIS',
-                    style: TextStyle(
-                        color: Colors.grey[800],
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold)),
-              ],
+    if (_selectedPayment == 'QRIS') {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        color: cs.surface,
+        child: Column(
+          children: [
+            Text('SCAN QRIS CODE',
+                style: tt.labelLarge?.copyWith(letterSpacing: 1)),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              color: Colors.white, // QR code must stay white
+              width: 160,
+              height: 160,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.qr_code_scanner,
+                      color: Colors.black, size: 100),
+                  const SizedBox(height: 4),
+                  Text('BUSTEDWORLD QRIS',
+                      style: TextStyle(
+                          color: Colors.grey[800],
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold)),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Text('Scan using GoPay, OVO, Dana, LinkAja or Banking App',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-        ],
-      ),
-    );
+            const SizedBox(height: 12),
+            Text('Scan using GoPay, OVO, Dana, LinkAja or Banking App',
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+          ],
+        ),
+      );
+    }
+
+    if (_selectedPayment == 'Midtrans') {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        color: cs.surface,
+        child: Column(
+          children: [
+            Icon(Icons.security, color: cs.primary, size: 40),
+            const SizedBox(height: 12),
+            Text(
+              'MIDTRANS SNAP SECURE CHECKOUT',
+              style: tt.labelLarge?.copyWith(letterSpacing: 1, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'You will be redirected to Midtrans payment gateway to pay securely using Credit Card, E-Wallet (GoPay, ShopeePay), or Bank Transfer (Virtual Account).',
+              textAlign: TextAlign.center,
+              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox();
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/product.dart';
@@ -56,6 +57,17 @@ class ProductsNotifier extends Notifier<List<Product>> {
       }
       transaction.update(docRef, {'stockPerSize': newStock});
     });
+  }
+
+  Future<void> clearAllProducts() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('products').get();
+      for (var doc in snapshot.docs) {
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      debugPrint('Failed to clear products: $e');
+    }
   }
 }
 

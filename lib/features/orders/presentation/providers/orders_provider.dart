@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:bustedworld/features/orders/domain/entities/order.dart';
 import 'package:bustedworld/core/providers/notification_provider.dart';
 import 'package:bustedworld/features/shop/presentation/providers/products_provider.dart';
+import 'package:bustedworld/core/services/notification_service.dart';
 
 class OrdersNotifier extends Notifier<List<Order>> {
   @override
@@ -14,10 +17,41 @@ class OrdersNotifier extends Notifier<List<Order>> {
 
   Future<void> _loadOrders() async {
     FirebaseFirestore.instance.collection('orders').snapshots().listen((snapshot) {
-      final orders = snapshot.docs.map((doc) {
+      final oldOrders = state;
+      final newOrders = snapshot.docs.map((doc) {
         return Order.fromJson(doc.data());
       }).toList();
-      state = orders;
+
+      if (oldOrders.isNotEmpty) {
+        final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+        for (var newOrder in newOrders) {
+          final oldOrder = oldOrders.firstWhere(
+            (o) => o.id == newOrder.id,
+            orElse: () => Order(
+              userId: '',
+              customerName: '',
+              address: '',
+              items: [],
+              totalAmount: 0,
+              status: 'unknown',
+            ),
+          );
+
+          if (oldOrder.status != 'unknown' && oldOrder.status != newOrder.status) {
+            // Status changed! Notify user if it's their order
+            if (newOrder.userId == currentUserId) {
+              LocalNotificationService.showNotification(
+                id: newOrder.id.hashCode,
+                title: 'ORDER UPDATED',
+                body: 'Your order #${newOrder.id.substring(0, 8).toUpperCase()} is now ${newOrder.status.toUpperCase()}',
+                payload: newOrder.id,
+              );
+            }
+          }
+        }
+      }
+
+      state = newOrders;
     });
   }
 
@@ -50,8 +84,16 @@ class OrdersNotifier extends Notifier<List<Order>> {
     }
   }
 
-  void clearAllOrders() {
-    // Unsupported in pure Firebase
+  Future<void> clearAllOrders() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('orders').get();
+      for (var doc in snapshot.docs) {
+        await doc.reference.delete();
+      }
+      state = [];
+    } catch (e) {
+      debugPrint('Failed to clear orders: $e');
+    }
   }
 }
 

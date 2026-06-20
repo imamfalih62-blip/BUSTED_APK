@@ -5,12 +5,14 @@ import 'core/router/app_router.dart';
 import 'core/widgets/notification_overlay.dart';
 import 'core/services/storage_service.dart';
 import 'core/services/firebase_service.dart';
+import 'core/services/notification_service.dart';
 import 'core/providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StorageService.init();
   await FirebaseService.init();
+  await LocalNotificationService.init();
 
   // Create a ProviderContainer early so we can load the saved theme
   // before the first frame renders.

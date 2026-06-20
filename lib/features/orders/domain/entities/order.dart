@@ -38,16 +38,18 @@ class Order {
 
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? const Uuid().v4(),
       userId: json['userId'] as String? ?? '',
-      customerName: json['customerName'] as String,
-      address: json['address'] as String,
-      items: (json['items'] as List<dynamic>)
+      customerName: json['customerName'] as String? ?? '',
+      address: json['address'] as String? ?? '',
+      items: ((json['items'] as List<dynamic>?) ?? [])
           .map((item) => CartItem.fromJson(item as Map<String, dynamic>))
           .toList(),
-      totalAmount: (json['totalAmount'] as num).toDouble(),
-      date: DateTime.parse(json['date'] as String),
-      status: json['status'] as String,
+      totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0.0,
+      date: json['date'] != null
+          ? DateTime.tryParse(json['date'] as String) ?? DateTime.now()
+          : DateTime.now(),
+      status: json['status'] as String? ?? 'Pending',
     );
   }
 }

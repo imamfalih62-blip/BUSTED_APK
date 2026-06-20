@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+
 import '../../../../core/providers/theme_provider.dart';
-import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../shop/presentation/providers/products_provider.dart';
-import '../../../auth/presentation/providers/users_provider.dart';
-import '../../../orders/presentation/providers/orders_provider.dart';
-import '../../../cart/presentation/providers/cart_provider.dart';
 
 class AdminSettingsPage extends ConsumerWidget {
   const AdminSettingsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final activeTheme = ref.watch(themeProvider);
 
@@ -60,14 +54,6 @@ class AdminSettingsPage extends ConsumerWidget {
           const SizedBox(height: 8),
           _ThemeSwitcherPanel(activeTheme: activeTheme),
 
-          const SizedBox(height: 24),
-
-          // ── Section: Danger Zone ───────────────────────────────────────
-          _sectionLabel(context, 'DANGER ZONE', color: cs.error),
-          const SizedBox(height: 8),
-          _DangerTile(
-            onTap: () => _confirmReset(context, ref),
-          ),
         ],
       ),
     );
@@ -121,55 +107,6 @@ class AdminSettingsPage extends ConsumerWidget {
     );
   }
 
-  void _confirmReset(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded,
-                color: Theme.of(ctx).colorScheme.error),
-            const SizedBox(width: 8),
-            const Text('Reset System?',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: const Text(
-            'This will delete all modified and custom data. The application will restart to initial factory default state. Are you sure?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await StorageService.clearAll();
-              ref.read(productsProvider.notifier).build();
-              ref.read(usersProvider.notifier).clearAllUsers();
-              ref.read(ordersProvider.notifier).clearAllOrders();
-              ref.read(cartProvider.notifier).clearCart();
-              ref.read(currentUserProvider.notifier).logout();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('All databases reset to default state!'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-                context.go('/login');
-              }
-            },
-            child: const Text('Reset Everything'),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // ─── Theme Switcher Panel ─────────────────────────────────────────────────────
@@ -371,34 +308,3 @@ class _ThemeCard extends StatelessWidget {
   }
 }
 
-// ─── Danger Tile ──────────────────────────────────────────────────────────────
-class _DangerTile extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _DangerTile({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.error.withOpacity(0.07),
-        border: Border.all(color: cs.error, width: 1.5),
-      ),
-      child: ListTile(
-        leading: Icon(Icons.delete_forever, color: cs.error, size: 28),
-        title: Text('RESET SYSTEM DATABASES',
-            style: tt.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: cs.error,
-                letterSpacing: 1)),
-        subtitle: Text(
-            'Deletes all local users, products, cart and orders history.',
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-        onTap: onTap,
-      ),
-    );
-  }
-}
