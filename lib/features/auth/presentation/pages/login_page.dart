@@ -69,7 +69,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             child: _SplashShard(
               width: 280,
               height: 280,
-              color: cs.primary.withOpacity(isDark ? 0.25 : 0.18),
+              color: cs.primary.withValues(alpha: isDark ? 0.25 : 0.18),
               angle: 0.35,
             ),
           ),
@@ -79,7 +79,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             child: _SplashShard(
               width: 240,
               height: 240,
-              color: cs.secondary.withOpacity(isDark ? 0.15 : 0.20),
+              color: cs.secondary.withValues(alpha: isDark ? 0.15 : 0.20),
               angle: -0.25,
             ),
           ),
@@ -225,7 +225,7 @@ class _SplashShard extends StatelessWidget {
           height: height,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [color, color.withOpacity(0)],
+              colors: [color, color.withValues(alpha: 0)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

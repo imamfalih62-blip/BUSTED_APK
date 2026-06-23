@@ -40,7 +40,7 @@ class _ProductDetailPageState extends ConsumerState<ProductDetailPage> {
         elevation: 0,
         leading: Container(
           margin: const EdgeInsets.all(8),
-          color: cs.surface.withOpacity(0.7),
+          color: cs.surface.withValues(alpha: 0.7),
           child: IconButton(
             icon: Icon(Icons.arrow_back, color: cs.onSurface),
             onPressed: () => context.pop(),

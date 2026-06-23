@@ -133,7 +133,7 @@ class CartPage extends ConsumerWidget {
                         ),
                         const SizedBox(height: 16),
                         // Divider
-                        Container(height: 1, color: cs.outline.withOpacity(0.3)),
+                        Container(height: 1, color: cs.outline.withValues(alpha: 0.3)),
                         const SizedBox(height: 16),
                         // Qty controls + delete
                         Row(

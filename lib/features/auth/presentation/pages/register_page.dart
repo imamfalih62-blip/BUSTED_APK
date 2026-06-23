@@ -36,6 +36,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
       setState(() => _isLoading = false);
 
+      if (!mounted) return;
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -79,7 +80,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             child: _SplashShard(
               width: 260,
               height: 260,
-              color: cs.secondary.withOpacity(0.15),
+              color: cs.secondary.withValues(alpha: 0.15),
               angle: 0.2,
             ),
           ),
@@ -89,7 +90,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             child: _SplashShard(
               width: 200,
               height: 200,
-              color: cs.primary.withOpacity(0.12),
+              color: cs.primary.withValues(alpha: 0.12),
               angle: -0.3,
             ),
           ),
@@ -209,7 +210,7 @@ class _SplashShard extends StatelessWidget {
           height: height,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [color, color.withOpacity(0)],
+              colors: [color, color.withValues(alpha: 0)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

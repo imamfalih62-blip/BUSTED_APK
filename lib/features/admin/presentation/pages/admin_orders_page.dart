@@ -41,7 +41,7 @@ class AdminOrdersPage extends ConsumerWidget {
                 return Card(
                   margin: const EdgeInsets.only(bottom: 16),
                   shape: cardShape.copyWith(
-                    side: BorderSide(color: cs.outline.withOpacity(0.3), width: 1.5),
+                    side: BorderSide(color: cs.outline.withValues(alpha: 0.3), width: 1.5),
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -67,54 +67,35 @@ class AdminOrdersPage extends ConsumerWidget {
       builder: (context) {
         return AlertDialog(
           title: const Text('UPDATE STATUS'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: const Text('Pending'),
-                leading: Radio<String>(
+          content: RadioGroup<String>(
+            groupValue: currentStatus,
+            onChanged: (value) {
+              if (value != null) {
+                ref.read(ordersProvider.notifier).updateOrderStatus(orderId, value);
+                Navigator.pop(context);
+              }
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RadioListTile<String>(
+                  title: const Text('Pending'),
                   value: 'Pending',
-                  groupValue: currentStatus,
-                  onChanged: (value) {
-                    ref.read(ordersProvider.notifier).updateOrderStatus(orderId, value!);
-                    Navigator.pop(context);
-                  },
                 ),
-              ),
-              ListTile(
-                title: const Text('Processing'),
-                leading: Radio<String>(
+                RadioListTile<String>(
+                  title: const Text('Processing'),
                   value: 'Processing',
-                  groupValue: currentStatus,
-                  onChanged: (value) {
-                    ref.read(ordersProvider.notifier).updateOrderStatus(orderId, value!);
-                    Navigator.pop(context);
-                  },
                 ),
-              ),
-              ListTile(
-                title: const Text('Shipped'),
-                leading: Radio<String>(
+                RadioListTile<String>(
+                  title: const Text('Shipped'),
                   value: 'Shipped',
-                  groupValue: currentStatus,
-                  onChanged: (value) {
-                    ref.read(ordersProvider.notifier).updateOrderStatus(orderId, value!);
-                    Navigator.pop(context);
-                  },
                 ),
-              ),
-              ListTile(
-                title: const Text('Completed'),
-                leading: Radio<String>(
+                RadioListTile<String>(
+                  title: const Text('Completed'),
                   value: 'Completed',
-                  groupValue: currentStatus,
-                  onChanged: (value) {
-                    ref.read(ordersProvider.notifier).updateOrderStatus(orderId, value!);
-                    Navigator.pop(context);
-                  },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

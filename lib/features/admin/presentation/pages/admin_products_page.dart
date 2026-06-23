@@ -75,7 +75,7 @@ class AdminProductsPage extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: cardShape.copyWith(
-        side: BorderSide(color: cs.outline.withOpacity(0.3), width: 1.5),
+        side: BorderSide(color: cs.outline.withValues(alpha: 0.3), width: 1.5),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
@@ -83,11 +83,11 @@ class AdminProductsPage extends ConsumerWidget {
           width: 60,
           height: 60,
           decoration: BoxDecoration(
-            border: Border.all(color: cs.outline.withOpacity(0.5), width: 1.5),
+            border: Border.all(color: cs.outline.withValues(alpha: 0.5), width: 1.5),
           ),
           child: product.imageUrl.startsWith('data:image') 
-              ? Image.memory(base64Decode(product.imageUrl.split(',').last), fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.error))
-              : Image.network(product.imageUrl, fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.error)),
+              ? Image.memory(base64Decode(product.imageUrl.split(',').last), fit: BoxFit.cover, errorBuilder: (_,_,_) => const Icon(Icons.error))
+              : Image.network(product.imageUrl, fit: BoxFit.cover, errorBuilder: (_,_,_) => const Icon(Icons.error)),
         ),
         title: Text(product.title.toUpperCase(), style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
         subtitle: Column(
@@ -176,6 +176,7 @@ class _AddProductFormState extends ConsumerState<AddProductForm> {
           imageUrl = 'data:image/jpeg;base64,$base64Str';
         });
       } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to read image: $e')));
       } finally {
         setState(() => _isUploading = false);
@@ -250,7 +251,7 @@ class _AddProductFormState extends ConsumerState<AddProductForm> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: ['baju', 'celana', 'aksesoris', 'topi'].contains(category.toLowerCase())
+                initialValue: ['baju', 'celana', 'aksesoris', 'topi'].contains(category.toLowerCase())
                     ? category.toLowerCase()
                     : 'baju',
                 decoration: const InputDecoration(labelText: 'CATEGORY'),
@@ -362,6 +363,7 @@ class _EditProductFormState extends ConsumerState<EditProductForm> {
           imageUrl = 'data:image/jpeg;base64,$base64Str';
         });
       } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to read image: $e')));
       } finally {
         setState(() => _isUploading = false);
@@ -434,7 +436,7 @@ class _EditProductFormState extends ConsumerState<EditProductForm> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: ['baju', 'celana', 'aksesoris', 'topi'].contains(category.toLowerCase())
+                initialValue: ['baju', 'celana', 'aksesoris', 'topi'].contains(category.toLowerCase())
                     ? category.toLowerCase()
                     : 'baju',
                 decoration: const InputDecoration(labelText: 'CATEGORY'),

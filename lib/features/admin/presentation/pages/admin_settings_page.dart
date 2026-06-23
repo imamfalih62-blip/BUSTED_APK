@@ -89,7 +89,7 @@ class AdminSettingsPage extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: cs.surface,
-        border: Border.all(color: cs.outline.withOpacity(0.3), width: 1),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.3), width: 1),
       ),
       child: ListTile(
         contentPadding:
@@ -123,7 +123,7 @@ class _ThemeSwitcherPanel extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         color: cs.surface,
-        border: Border.all(color: cs.outline.withOpacity(0.3), width: 1),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.3), width: 1),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -227,13 +227,13 @@ class _ThemeCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: bg,
           border: Border.all(
-            color: isActive ? cs.primary : cs.outline.withOpacity(0.4),
+            color: isActive ? cs.primary : cs.outline.withValues(alpha: 0.4),
             width: isActive ? 2.5 : 1,
           ),
           boxShadow: isActive
               ? [
                   BoxShadow(
-                      color: cs.primary.withOpacity(0.3),
+                      color: cs.primary.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(2, 4))
                 ]
@@ -261,12 +261,12 @@ class _ThemeCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                      width: 36, height: 4, color: pri.withOpacity(0.8)),
+                      width: 36, height: 4, color: pri.withValues(alpha: 0.8)),
                   const SizedBox(height: 3),
                   Container(
                       width: 52,
                       height: 3,
-                      color: acc.withOpacity(0.6)),
+                      color: acc.withValues(alpha: 0.6)),
                 ],
               ),
             ),

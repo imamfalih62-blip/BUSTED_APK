@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import '../../../cart/presentation/providers/cart_provider.dart';
-import '../../../cart/domain/entities/cart_item.dart';
 import '../../../orders/presentation/providers/orders_provider.dart';
 import '../../../orders/domain/entities/order.dart';
 import '../../../shop/presentation/providers/products_provider.dart';
@@ -455,7 +454,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
             DropdownButtonFormField<String>(
               dropdownColor: cs.surface,
               style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.bold),
-              value: _selectedBank,
+              initialValue: _selectedBank,
               items: ['BCA', 'Mandiri', 'BNI', 'BRI'].map((bank) {
                 return DropdownMenuItem(
                   value: bank,

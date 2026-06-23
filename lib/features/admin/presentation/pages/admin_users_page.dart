@@ -38,7 +38,7 @@ class AdminUsersPage extends ConsumerWidget {
                   margin: const EdgeInsets.only(bottom: 16),
                   shape: cardShape.copyWith(
                     side: BorderSide(
-                      color: user.isBlocked ? cs.error : cs.outline.withOpacity(0.2),
+                      color: user.isBlocked ? cs.error : cs.outline.withValues(alpha: 0.2),
                       width: user.isBlocked ? 2.0 : 1.0,
                     ),
                   ),
@@ -74,7 +74,7 @@ class AdminUsersPage extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: cs.secondary.withOpacity(0.15),
+                              color: cs.secondary.withValues(alpha: 0.15),
                               border: Border.all(color: cs.secondary, width: 1.5),
                             ),
                             child: Text('ADMIN', style: TextStyle(color: cs.secondary, fontSize: 10, fontWeight: FontWeight.bold)),

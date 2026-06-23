@@ -108,7 +108,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: cs.surface,
-              border: Border(bottom: BorderSide(color: cs.outline.withOpacity(0.2), width: 1.5)),
+              border: Border(bottom: BorderSide(color: cs.outline.withValues(alpha: 0.2), width: 1.5)),
             ),
             child: Row(
               children: [

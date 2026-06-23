@@ -41,7 +41,7 @@ class _OrderSuccessPageState extends ConsumerState<OrderSuccessPage> {
                       bottomRight: Radius.circular(20),
                     ),
                   ),
-                  color: cs.primary.withOpacity(0.15),
+                  color: cs.primary.withValues(alpha: 0.15),
                 ),
                 child: Icon(
                   Icons.check_circle_outline,

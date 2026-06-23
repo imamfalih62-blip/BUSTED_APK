@@ -141,7 +141,7 @@ class AdminDashboardPage extends ConsumerWidget {
       decoration: ShapeDecoration(
         color: cs.surface,
         shape: cardShape.copyWith(
-          side: BorderSide(color: cs.outline.withOpacity(0.3), width: 1.5),
+          side: BorderSide(color: cs.outline.withValues(alpha: 0.3), width: 1.5),
         ),
       ),
       child: Material(
@@ -160,7 +160,7 @@ class AdminDashboardPage extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: ShapeDecoration(
-                    color: color.withOpacity(0.15),
+                    color: color.withValues(alpha: 0.15),
                     shape: const BeveledRectangleBorder(
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(4),
